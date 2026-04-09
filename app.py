@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from streamlit_autorefresh import st_autorefresh
 
 # -----------------------------
@@ -15,7 +16,6 @@ st.set_page_config(page_title="Weather Dashboard", layout="wide")
 # -----------------------------
 st.sidebar.header("⚙️ Settings")
 
-# Separate refresh controls
 clock_refresh_sec = st.sidebar.selectbox(
     "🕒 Clock Refresh (seconds)",
     [1, 5, 10],
@@ -28,7 +28,7 @@ weather_refresh_min = st.sidebar.selectbox(
     index=1
 )
 
-# Clock refresh (fast)
+# Clock refresh (every second)
 st_autorefresh(interval=clock_refresh_sec * 1000, key="clock_refresh")
 
 # -----------------------------
@@ -36,8 +36,8 @@ st_autorefresh(interval=clock_refresh_sec * 1000, key="clock_refresh")
 # -----------------------------
 st.title("🌦️ Live Weather Intelligence Dashboard")
 
-# Live Clock
-current_time = datetime.now().strftime("%d %B %Y, %I:%M:%S %p")
+# ✅ IST TIME FIX (WORKS IN DEPLOY)
+current_time = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%d %B %Y, %I:%M:%S %p")
 st.markdown(f"📅 **Current Time:** {current_time}")
 
 st.info("ℹ️ Shows real-time current weather + short-term forecast")
