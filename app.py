@@ -15,24 +15,28 @@ st.set_page_config(page_title="Weather Dashboard", layout="wide")
 # -----------------------------
 st.sidebar.header("⚙️ Settings")
 
-refresh_minutes = st.sidebar.selectbox(
-    "🔄 Refresh Interval (minutes)",
-    [30, 60]
+# Separate refresh controls
+clock_refresh_sec = st.sidebar.selectbox(
+    "🕒 Clock Refresh (seconds)",
+    [1, 5, 10],
+    index=0
 )
 
-unit = st.sidebar.radio(
-    "🌡️ Temperature Unit",
-    ["Celsius (°C)", "Fahrenheit (°F)"]
+weather_refresh_min = st.sidebar.selectbox(
+    "🌦️ Weather Refresh (minutes)",
+    [15, 30, 60],
+    index=1
 )
 
-refresh_interval = refresh_minutes * 60
-st_autorefresh(interval=refresh_interval * 1000, key="refresh")
+# Clock refresh (fast)
+st_autorefresh(interval=clock_refresh_sec * 1000, key="clock_refresh")
 
 # -----------------------------
 # HEADER
 # -----------------------------
 st.title("🌦️ Live Weather Intelligence Dashboard")
 
+# Live Clock
 current_time = datetime.now().strftime("%d %B %Y, %I:%M:%S %p")
 st.markdown(f"📅 **Current Time:** {current_time}")
 
@@ -71,7 +75,7 @@ if st.session_state.prev_city != city:
 # -----------------------------
 # API FUNCTION
 # -----------------------------
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=weather_refresh_min * 60)
 def load_data(city, lat, lon):
     try:
         current = requests.get(
@@ -109,8 +113,13 @@ if "main" not in current:
     st.stop()
 
 # -----------------------------
-# UNIT CONVERSION
+# UNIT SETTINGS
 # -----------------------------
+unit = st.sidebar.radio(
+    "🌡️ Temperature Unit",
+    ["Celsius (°C)", "Fahrenheit (°F)"]
+)
+
 def convert_temp(temp):
     if unit == "Fahrenheit (°F)":
         return (temp * 9/5) + 32
@@ -139,10 +148,10 @@ def uv_category(uvi):
     elif uvi <= 10:
         return f"{uvi} (Very High)"
     else:
-        return f"{uvi} (Extreme )"
+        return f"{uvi} (Extreme)"
 
 # -----------------------------
-# UV LOGIC (NO FAIL)
+# UV LOGIC
 # -----------------------------
 try:
     uvi = uv.get('current', {}).get('uvi', None)
@@ -192,7 +201,6 @@ col3.metric("💧 Humidity", f"{humidity}%")
 col4.metric("Pressure", f"{pressure} hPa")
 col5.metric("👁️ Visibility", f"{visibility:.1f} km")
 
-# ✅ FIXED UV UI (NO TRUNCATION)
 with col6:
     st.metric("☀️ UV Index", f"{uvi}")
     st.caption(f"{uv_display}")
